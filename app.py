@@ -212,8 +212,9 @@ def patient_intake():
 
 # ===== RUN SERVER =====
 if __name__ == "__main__":
-    logger.info("Server started on http://127.0.0.1:5000")
+    logger.info("Server started on http://127.0.0.1:3000")
     logger.info("Output file: %s", OUTPUT_PATH)
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    app.run(host="127.0.0.1", port=3000, debug=False)
+
