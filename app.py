@@ -8,13 +8,24 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import subprocess
 import urllib.parse
-import getpass
+import winreg
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
+def get_logged_in_user():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI")
+        username, _ = winreg.QueryValueEx(key, "LastLoggedOnUser")
+        key.Close()
+        # Extract just the username part (e.g., DOMAIN\Username → Username)
+        return username.split("\\")[-1]
+    except Exception:
+        return getpass.getuser()
+
 # Get the actual logged-in username
-USERNAME = getpass.getuser()
+USERNAME = get_logged_in_user()
 
 # ======= CONFIGURATION =======
 # Build the correct Documents path
@@ -225,6 +236,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
