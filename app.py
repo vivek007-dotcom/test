@@ -8,42 +8,22 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import subprocess
 import urllib.parse
-import ctypes
-import ctypes.wintypes
-import getpass
+import subprocess
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
-def get_active_user():
-    WTS_CURRENT_SERVER_HANDLE = ctypes.c_void_p(0)
-    WTS_CURRENT_SESSION = ctypes.wintypes.DWORD(-1)
-    WTSUserName = 5
-
-    buf = ctypes.c_void_p()
-    bytes_returned = ctypes.wintypes.DWORD()
-
-    result = ctypes.windll.wtsapi32.WTSQuerySessionInformationW(
-        WTS_CURRENT_SERVER_HANDLE,
-        WTS_CURRENT_SESSION,
-        WTSUserName,
-        ctypes.byref(buf),
-        ctypes.byref(bytes_returned)
-    )
-
-    if result and bytes_returned.value > 0:
-        username = ctypes.wstring_at(buf)
-        ctypes.windll.wtsapi32.WTSFreeMemory(buf)
-        return username.strip()
-    else:
-        return getpass.getuser().strip()
+def get_domain_name():
+    try:
+        result = subprocess.run(["whoami"], capture_output=True, text=True)
+        full_identity = result.stdout.strip()  # e.g., ssspl-l-024\signity
+        domain = full_identity.split("\\")[0]  # extract ssspl-l-024
+        return domain
+    except Exception:
+        return "Default"
 
 # Get the actual logged-in username
-USERNAME = get_active_user()
-if not USERNAME:
-    USERNAME = "Default"
-# ======= CONFIGURATION =======
-# Build the correct Documents path
+USERNAME = get_domain_name()
 DOCUMENTS_DIR = os.path.join("C:\\Users", USERNAME, "Documents", "CitrixAutomation")
 OUTPUT_PATH = os.path.join(DOCUMENTS_DIR, "CitrixParameters.txt")
 LOG_FILE = os.path.join(DOCUMENTS_DIR, "local_patient_api.log")
@@ -251,6 +231,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
