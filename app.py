@@ -8,24 +8,37 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import subprocess
 import urllib.parse
-import winreg
+import ctypes
+import ctypes.wintypes
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
-def get_logged_in_user():
-    try:
-        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI")
-        username, _ = winreg.QueryValueEx(key, "LastLoggedOnUser")
-        key.Close()
-        # Extract just the username part (e.g., DOMAIN\Username → Username)
-        return username.split("\\")[-1]
-    except Exception:
+def get_active_user():
+    WTS_CURRENT_SERVER_HANDLE = ctypes.c_void_p(0)
+    WTS_CURRENT_SESSION = ctypes.wintypes.DWORD(-1)
+    WTSUserName = 5
+
+    buf = ctypes.c_void_p()
+    bytes_returned = ctypes.wintypes.DWORD()
+
+    result = ctypes.windll.wtsapi32.WTSQuerySessionInformationW(
+        WTS_CURRENT_SERVER_HANDLE,
+        WTS_CURRENT_SESSION,
+        WTSUserName,
+        ctypes.byref(buf),
+        ctypes.byref(bytes_returned)
+    )
+
+    if result and bytes_returned.value > 0:
+        username = ctypes.wstring_at(buf)
+        ctypes.windll.wtsapi32.WTSFreeMemory(buf)
+        return username
+    else:
         return getpass.getuser()
 
 # Get the actual logged-in username
-USERNAME = get_logged_in_user()
+USERNAME = get_active_user()
 
 # ======= CONFIGURATION =======
 # Build the correct Documents path
@@ -236,6 +249,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
