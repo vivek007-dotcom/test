@@ -8,18 +8,19 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import subprocess
 import urllib.parse
+import getpass
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
+# Get the actual logged-in username
+USERNAME = getpass.getuser()
+
 # ======= CONFIGURATION =======
-# Get the real user profile path from environment
-USERPROFILE = os.environ.get("USERPROFILE", "C:\\Users\\Default")
-DOCUMENTS_DIR = os.path.join(USERPROFILE, "Documents", "CitrixAutomation")
+# Build the correct Documents path
+DOCUMENTS_DIR = os.path.join("C:\\Users", USERNAME, "Documents", "CitrixAutomation")
 OUTPUT_PATH = os.path.join(DOCUMENTS_DIR, "CitrixParameters.txt")
 LOG_FILE = os.path.join(DOCUMENTS_DIR, "local_patient_api.log")
-
-# Ensure the folder exists early
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)
 
 # 👇 CHANGE THIS VALUE ANYTIME — your flow name
@@ -224,6 +225,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
