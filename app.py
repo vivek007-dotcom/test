@@ -6,24 +6,24 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
-import subprocess
-import urllib.parse
-import subprocess
+import wmi
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
-def get_domain_name():
+def get_logged_in_username():
     try:
-        result = subprocess.run(["whoami"], capture_output=True, text=True)
-        full_identity = result.stdout.strip()  # e.g., ssspl-l-024\signity
-        domain = full_identity.split("\\")[0]  # extract ssspl-l-024
-        return domain
+        wmi_obj = wmi.WMI()
+        for session in wmi_obj.Win32_ComputerSystem():
+            username = session.UserName  # e.g., 'SSSPL-L-024\\Signity'
+            if username:
+                return username.split("\\")[0]  # returns 'SSSPL-L-024'
     except Exception:
-        return "Default"
+        pass
+    return "Default"
 
 # Get the actual logged-in username
-USERNAME = get_domain_name()
+USERNAME = get_logged_in_username()
 DOCUMENTS_DIR = os.path.join("C:\\Users", USERNAME, "Documents", "CitrixAutomation")
 OUTPUT_PATH = os.path.join(DOCUMENTS_DIR, "CitrixParameters.txt")
 LOG_FILE = os.path.join(DOCUMENTS_DIR, "local_patient_api.log")
@@ -231,6 +231,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
