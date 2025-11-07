@@ -10,6 +10,7 @@ import subprocess
 import urllib.parse
 import ctypes
 import ctypes.wintypes
+import getpass
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
@@ -33,13 +34,14 @@ def get_active_user():
     if result and bytes_returned.value > 0:
         username = ctypes.wstring_at(buf)
         ctypes.windll.wtsapi32.WTSFreeMemory(buf)
-        return username
+        return username.strip()
     else:
-        return getpass.getuser()
+        return getpass.getuser().strip()
 
 # Get the actual logged-in username
 USERNAME = get_active_user()
-
+if not USERNAME:
+    USERNAME = "Default"
 # ======= CONFIGURATION =======
 # Build the correct Documents path
 DOCUMENTS_DIR = os.path.join("C:\\Users", USERNAME, "Documents", "CitrixAutomation")
@@ -249,6 +251,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
