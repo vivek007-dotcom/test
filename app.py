@@ -13,7 +13,8 @@ app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
 # ======= CONFIGURATION =======
-OUTPUT_PATH = r"C:\Users\Signity\Documents\CitrixAutomation\CitrixParameters.txt"  # <— updated path
+DOCUMENTS_DIR = os.path.join(os.path.expanduser("~"), "Documents", "CitrixAutomation")
+OUTPUT_PATH = os.path.join(DOCUMENTS_DIR, "CitrixParameters.txt")
 
 # 👇 CHANGE THIS VALUE ANYTIME — your flow name
 FLOW_NAME = "TestCMD"  # ← edit this only
@@ -217,4 +218,5 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
