@@ -47,7 +47,7 @@ ALL_FIELDS = [
 ]
 
 # ===== LOGGING =====
-LOG_FILE = os.path.join(os.path.expanduser("~"), "local_patient_api.log")
+LOG_FILE = os.path.join(DOCUMENTS_DIR, "local_patient_api.log")
 logger = logging.getLogger("local_patient_api")
 logger.setLevel(logging.INFO)
 handler = RotatingFileHandler(LOG_FILE, maxBytes=500000, backupCount=3, encoding="utf-8")
@@ -225,6 +225,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
