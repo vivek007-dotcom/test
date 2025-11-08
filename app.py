@@ -6,24 +6,37 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
-import wmi
+import ctypes
+import ctypes.wintypes
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
-def get_logged_in_username():
-    try:
-        wmi_obj = wmi.WMI()
-        for session in wmi_obj.Win32_ComputerSystem():
-            username = session.UserName  # e.g., 'SSSPL-L-024\\Signity'
-            if username:
-                return username.split("\\")[0]  # returns 'SSSPL-L-024'
-    except Exception:
-        pass
-    return "Default"
+def get_active_user():
+    WTS_CURRENT_SERVER_HANDLE = ctypes.c_void_p(0)
+    WTS_CURRENT_SESSION = ctypes.wintypes.DWORD(-1)
+    WTSUserName = 5
+
+    buf = ctypes.c_void_p()
+    bytes_returned = ctypes.wintypes.DWORD()
+
+    result = ctypes.windll.wtsapi32.WTSQuerySessionInformationW(
+        WTS_CURRENT_SERVER_HANDLE,
+        WTS_CURRENT_SESSION,
+        WTSUserName,
+        ctypes.byref(buf),
+        ctypes.byref(bytes_returned)
+    )
+
+    if result and bytes_returned.value > 0:
+        username = ctypes.wstring_at(buf)
+        ctypes.windll.wtsapi32.WTSFreeMemory(buf)
+        return username
+    else:
+        return getpass.getuser()
 
 # Get the actual logged-in username
-USERNAME = get_logged_in_username()
+USERNAME = get_active_user()
 DOCUMENTS_DIR = os.path.join("C:\\Users", USERNAME, "Documents", "CitrixAutomation")
 OUTPUT_PATH = os.path.join(DOCUMENTS_DIR, "CitrixParameters.txt")
 LOG_FILE = os.path.join(DOCUMENTS_DIR, "local_patient_api.log")
@@ -231,6 +244,7 @@ if __name__ == "__main__":
     logger.info("Flow name (static): %s", FLOW_NAME)
     logger.info("PAD exe: %s", PAD_EXE_PATH)
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
