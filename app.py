@@ -44,15 +44,29 @@ def update_app_if_needed():
     if remote and remote != local:
         logger.info(f"Updating app.py from version {local} to {remote}")
         try:
+            # Schedule restart before overwriting app.py
+            task_name = "FlaskAPI_Restart"
+            trigger_path = os.path.join(APP_DIR, "update_trigger.py")
+            run_time = (datetime.now() + timedelta(seconds=10)).strftime("%H:%M")
+
+            subprocess.run([
+                "schtasks", "/Create", "/TN", task_name,
+                "/TR", f'"{sys.executable}" "{trigger_path}"',
+                "/SC", "ONCE", "/ST", run_time,
+                "/F"
+            ], shell=True)
+
+            # Overwrite app.py and version.txt
             r = requests.get(GITHUB_APP_URL)
             if r.status_code == 200:
                 with open(__file__, "w", encoding="utf-8") as f:
                     f.write(r.text)
                 with open(LOCAL_VERSION_FILE, "w") as f:
                     f.write(remote)
-                logger.info("Update successful. Triggering external restart.")
-                subprocess.Popen(["python", os.path.join(APP_DIR, "update_trigger.py")])
-                os._exit(0)  # Force exit to allow service to stop
+
+            logger.info("Update successful. Scheduled restart via schtasks.")
+            os._exit(0)
+
         except Exception as e:
             logger.exception("Update failed")
     return False
@@ -228,6 +242,7 @@ def patient_intake():
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
