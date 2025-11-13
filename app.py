@@ -5,13 +5,14 @@ import os
 import json
 import logging
 from logging.handlers import RotatingFileHandler
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib
 import getpass
 import ctypes
 import ctypes.wintypes
 import requests
 import subprocess
+import sys
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
@@ -234,15 +235,8 @@ def patient_intake():
         safe_overwrite(OUTPUT_PATH, json_text)
         file_result["success"] = True
         logger.info("Successfully wrote patient parameters to %s", OUTPUT_PATH)
-    except Exception as e:
-        file_result["error"] = str(e)
-        logger.exception("File write failed")
+    except Exception
 
-    pad_result = {}
-if __name__ == "__main__":
+    if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
-
-
-
-
