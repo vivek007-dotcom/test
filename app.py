@@ -51,7 +51,8 @@ def update_app_if_needed():
                 with open(LOCAL_VERSION_FILE, "w") as f:
                     f.write(remote)
                 logger.info("Update successful. Restarting service.")
-                subprocess.Popen(["sc", "stop", "FlaskAPI"])
+                subprocess.run(["sc", "stop", "FlaskAPI"], check=False)
+                subprocess.run(["sc", "start", "FlaskAPI"], check=False)
                 return True
         except Exception as e:
             logger.exception("Update failed")
@@ -228,3 +229,4 @@ def patient_intake():
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
