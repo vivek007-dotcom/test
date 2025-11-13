@@ -52,7 +52,7 @@ def update_app_if_needed():
                     f.write(remote)
                 logger.info("Update successful. Triggering external restart.")
                 subprocess.Popen(["python", os.path.join(APP_DIR, "update_trigger.py")])
-                return True
+                os._exit(0)  # Force exit to allow service to stop
         except Exception as e:
             logger.exception("Update failed")
     return False
@@ -228,5 +228,6 @@ def patient_intake():
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
