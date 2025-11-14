@@ -248,7 +248,6 @@ def patient_intake():
         "power_automate": pad_result
     }), status_code
 
-    if __name__ == "__main__":
+if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
-
