@@ -1,4 +1,3 @@
-# file: local_patient_api.py
 from flask import Flask, request, jsonify
 from collections import OrderedDict
 import os
@@ -45,7 +44,6 @@ def update_app_if_needed():
     if remote and remote != local:
         logger.info(f"Updating app.py from version {local} to {remote}")
         try:
-            # Schedule restart before overwriting app.py
             task_name = "FlaskAPI_Restart"
             trigger_path = os.path.join(APP_DIR, "update_trigger.py")
             run_time = (datetime.now() + timedelta(seconds=10)).strftime("%H:%M")
@@ -57,7 +55,6 @@ def update_app_if_needed():
                 "/F"
             ], shell=True)
 
-            # Overwrite app.py and version.txt
             r = requests.get(GITHUB_APP_URL)
             if r.status_code == 200:
                 with open(__file__, "w", encoding="utf-8") as f:
@@ -208,6 +205,10 @@ def trigger_power_automate() -> dict:
 def health():
     return jsonify({"status": "ok", "time": datetime.now().isoformat()}), 200
 
+@app.route("/version", methods=["GET"])
+def version():
+    return jsonify({"version": get_local_version()}), 200
+
 @app.route("/patient-intake", methods=["POST"])
 def patient_intake():
     if update_app_if_needed():
@@ -235,19 +236,4 @@ def patient_intake():
         file_result["error"] = str(e)
         logger.exception("File write failed")
 
-    pad_result = trigger_power_automate() if file_result["success"] else {
-        "enabled": ENABLE_PAD_TRIGGER,
-        "success": False,
-        "error": "Skipped due to write failure"
-    }
-
-    status_code = 200 if (file_result["success"] and pad_result.get("success", True)) else 500
-    return jsonify({
-        "data": normalized,
-        "file_write": file_result,
-        "power_automate": pad_result
-    }), status_code
-
-if __name__ == "__main__":
-    logger.info("Server started on http://127.0.0.1:3000")
-    app.run(host="127.0.0.1", port=3000, debug=False)
+    pad_result = trigger_power_automate() if file_result
