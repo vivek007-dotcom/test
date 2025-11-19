@@ -1,4 +1,4 @@
-# Version 1.0.6
+# Version 1.0.5
 from flask import Flask, request, jsonify
 from collections import OrderedDict
 import os
@@ -27,7 +27,7 @@ GITHUB_APP_URL = "https://raw.githubusercontent.com/vivek007-dotcom/test/main/ap
 def get_local_version():
     try:
         with open(LOCAL_VERSION_FILE, "r") as f:
-            return f.read().strip()
+            return f.read().strip().replace("version=", "").strip()
     except:
         return "0.0.0"
 
@@ -35,7 +35,7 @@ def get_remote_version():
     try:
         r = requests.get(GITHUB_VERSION_URL, timeout=5)
         if r.status_code == 200:
-            return r.text.strip()
+            return r.text.strip().replace("version=", "").strip()
     except:
         pass
     return None
@@ -260,6 +260,7 @@ def patient_intake():
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
