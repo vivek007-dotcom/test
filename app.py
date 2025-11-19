@@ -235,10 +235,21 @@ def patient_intake():
     except Exception as e:
         file_result["error"] = str(e)
         logger.exception("File write failed")
+        pad_result = trigger_power_automate() if file_result["success"] else {
+        "enabled": ENABLE_PAD_TRIGGER,
+        "success": False,
+        "error": "Skipped due to write failure"
+    }
 
-    pad_result = trigger_power_automate() if file_result
+    status_code = 200 if (file_result["success"] and pad_result.get("success", True)) else 500
+    return jsonify({
+        "data": normalized,
+        "file_write": file_result,
+        "power_automate": pad_result
+    }), status_code
 # ===== ENTRY POINT =====
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
