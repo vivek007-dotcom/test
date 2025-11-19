@@ -49,12 +49,13 @@ def update_app_if_needed():
         try:
             SCHEDTASKS_EXE = r"C:\Windows\System32\schtasks.exe"
             trigger_path = os.path.join(APP_DIR, "update_trigger.py")
-            run_time = (datetime.now() + timedelta(seconds=10)).strftime("%H:%M")
+            run_time = (datetime.now() + timedelta(minutes=1)).strftime("%H:%M")
 
             subprocess.run([
                 SCHEDTASKS_EXE, "/Create", "/TN", "FlaskAPI_Restart",
                 "/TR", f'"{sys.executable}" "{trigger_path}"',
                 "/SC", "ONCE", "/ST", run_time,
+                "/RU", "SYSTEM",
                 "/F"
             ], check=False)
 
@@ -260,6 +261,7 @@ def patient_intake():
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
