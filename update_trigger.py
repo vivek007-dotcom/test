@@ -2,6 +2,8 @@ import subprocess
 import time
 import logging
 
+SC_EXE = r"C:\Windows\System32\sc.exe"
+
 logging.basicConfig(
     filename="update_trigger.log",
     level=logging.INFO,
@@ -10,13 +12,13 @@ logging.basicConfig(
 )
 
 logging.info("Waiting for FlaskAPI to exit...")
-time.sleep(3)  # Give Flask a moment to shut down
+time.sleep(3)
 
 logging.info("Stopping FlaskAPI...")
-subprocess.run(["sc", "stop", "FlaskAPI"], check=False)
+subprocess.run([SC_EXE, "stop", "FlaskAPI"], check=False)
 time.sleep(5)
 
 logging.info("Starting FlaskAPI...")
-subprocess.run(["sc", "start", "FlaskAPI"], check=False)
+subprocess.run([SC_EXE, "start", "FlaskAPI"], check=False)
 
 logging.info("Restart complete.")
