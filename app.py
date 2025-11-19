@@ -12,6 +12,7 @@ import ctypes.wintypes
 import requests
 import subprocess
 import sys
+import threading
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
@@ -211,12 +212,6 @@ def version():
 
 @app.route("/patient-intake", methods=["POST"])
 def patient_intake():
-    if update_app_if_needed():
-        return jsonify({
-            "status": "update_triggered",
-            "message": "Service is restarting to apply latest version. Please retry shortly."
-        }), 202
-
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
 
@@ -235,6 +230,7 @@ def patient_intake():
     except Exception as e:
         file_result["error"] = str(e)
         logger.exception("File write failed")
+
     pad_result = trigger_power_automate() if file_result["success"] else {
         "enabled": ENABLE_PAD_TRIGGER,
         "success": False,
@@ -242,11 +238,22 @@ def patient_intake():
     }
 
     status_code = 200 if (file_result["success"] and pad_result.get("success", True)) else 500
-    return jsonify({
+    response = jsonify({
         "data": normalized,
         "file_write": file_result,
         "power_automate": pad_result
-    }), status_code
+    })
+
+    # Run update check AFTER sending response (non-blocking)
+    def background_update():
+        try:
+            update_app_if_needed()
+        except Exception as e:
+            logger.exception("Background update check failed")
+
+    threading.Thread(target=background_update, daemon=True).start()
+
+    return response, status_code
 
 # ===== ENTRY POINT =====
 if __name__ == "__main__":
