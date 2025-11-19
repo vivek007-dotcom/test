@@ -43,21 +43,22 @@ def get_remote_version():
 def update_app_if_needed():
     local = get_local_version()
     remote = get_remote_version()
+    logger.info(f"Local version={local}, Remote version={remote}")
     if remote and remote != local:
         logger.info(f"Updating app.py from version {local} to {remote}")
         try:
-            task_name = "FlaskAPI_Restart"
+            SCHEDTASKS_EXE = r"C:\Windows\System32\schtasks.exe"
             trigger_path = os.path.join(APP_DIR, "update_trigger.py")
             run_time = (datetime.now() + timedelta(seconds=10)).strftime("%H:%M")
 
             subprocess.run([
-                "schtasks", "/Create", "/TN", task_name,
+                SCHEDTASKS_EXE, "/Create", "/TN", "FlaskAPI_Restart",
                 "/TR", f'"{sys.executable}" "{trigger_path}"',
                 "/SC", "ONCE", "/ST", run_time,
                 "/F"
-            ], shell=True)
+            ], check=False)
 
-            r = requests.get(GITHUB_APP_URL)
+            r = requests.get(GITHUB_APP_URL, timeout=10)
             if r.status_code == 200:
                 with open(__file__, "w", encoding="utf-8") as f:
                     f.write(r.text)
@@ -66,11 +67,10 @@ def update_app_if_needed():
 
             logger.info("Update successful. Scheduled restart via schtasks.")
             os._exit(0)
-
-        except Exception as e:
+        except Exception:
             logger.exception("Update failed")
     return False
-
+    
 # ===== USERNAME RESOLUTION =====
 def get_active_user():
     WTS_CURRENT_SERVER_HANDLE = ctypes.c_void_p(0)
@@ -260,6 +260,7 @@ def patient_intake():
 if __name__ == "__main__":
     logger.info("Server started on http://127.0.0.1:3000")
     app.run(host="127.0.0.1", port=3000, debug=False)
+
 
 
 
